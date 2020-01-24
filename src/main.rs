@@ -5,11 +5,10 @@ extern crate gtk;
 use failure::Error;
 use gio::prelude::*;
 use gtk::prelude::*;
-use gtk::{Box, Button, ButtonExt, ContainerExt, Entry, WidgetExt};
-use libhandy;
-use libhandy::prelude::*;
+use gtk::{Box, ContainerExt, WidgetExt};
+//use libhandy;
+//use libhandy::prelude::*;
 use std::env;
-use std::error;
 
 /*
  * Consider -
@@ -40,88 +39,77 @@ Print(ele);
 }
 */
 
-fn postfixEvaluation() -> f64 {
-    6 as f64
-}
-fn isFunction(c: &String) -> bool {
-    match c.as_str() {
-        "*" => true,
-        "+" => true,
-        "-" => true,
-        "/" => true,
-        "^" => true,
-        _   => false,
 
+#[derive(Debug)]
+enum TokenType {
+    Number,
+    Operator,
+    LeftParenthesis,
+    RightParenthesis,
+}
+#[derive(Debug)]
+struct Token {
+    tokentype: TokenType,
+    numbervalue: i32,
+    stringvalue: String,
+}
+impl Token {
+    fn new(tokentype: TokenType, numbervalue: i32, stringvalue: String) -> Self {
+        Token {tokentype, numbervalue, stringvalue }
+        
     }
-
-}
-fn isLeftParen(c: String)-> bool {
-    match c.as_str() {
-        "(" => true,
-        _ => false,
+    fn is_operator(&self) -> bool {
+        match self.tokentype {
+            TokenType::Operator => true,
+            _ => false,
+        }
+            
+    }
+    fn is_number(&self) -> bool {
+        match self.tokentype {
+            TokenType::Number => true,
+            _ => false,
+        }
+    }
+    fn is_left_parenthesis(&self) -> bool  {
+        match self.tokentype {
+            TokenType::LeftParenthesis => true,
+            _ => false,
+        }
+    }
+    fn is_right_parenthesis(&self) -> bool  {
+       match self.tokentype {
+            TokenType::RightParenthesis => true,
+            _ => false,
+        }
     }
 }
 
-fn isOperator(c: String) -> bool {
-    false
-}
-
-fn isNumber(c: &String) -> bool {
-    match c.as_str() {
-        "1" => true,
-        "2" => true,
-        "3" => true,
-        "5" => true,
-        "6" => true,
-        "7" => true,
-        "8" => true,
-        "9" => true,
-        "10" => true,
-        _ => false,
+fn infix_to_postfix(token_list: Vec<&Token>) {
+    let outputqueue: std::collections::VecDeque<Token> = std::collections::VecDeque::new();
+    let operatorstack: Vec<Token> = Vec::new();
+    for token in token_list {
+        if token.is_number() {
+            
+        }
+        if token.is_operator() {
+        
+        }
+        
+        if token.is_left_parenthesis() {
+        
+        }
+        if token.is_right_parenthesis() {
+        
+        }
     }
 }
+
 
 /**
  * This method implements the shunting yard algorithm for converting infix to postfix
  * */
-fn infix_to_postfix(characters: Vec<String>) {
-    let mut outputqueue: std::collections::VecDeque<String> = std::collections::VecDeque::new();
-    let mut operatorstack: Vec<String> = vec![];
-    for x in characters {
-    if(isNumber(&x)) {
-        outputqueue.push_back(x.clone());
-    }
-    if(isFunction(&x)) {
-        operatorstack.push(x);
-    }
- 
-    
-        /*match x {
-            true => {
-                outputqueue.push(x);
-            }
-            false => {
-                
 
-                if x == "(" {
-                    operatorstack.push(std::string::String::from("("));
-                }
-                if x == ")" {
-                    
-                }
-            }
-        }*/
-    }
-    while !operatorstack.is_empty() { 
-        outputqueue.push_back(operatorstack.pop().unwrap());
-    }
-
-    println!("before: {:?}",outputqueue);
-    /*while !outputqueue.is_empty() {
-        let val = outputqueue.pop().unwrap();
-        print!(" {:?} ", val);
-    }*/
-}
 
 fn main() -> Result<(), Error> {
     gtk::init()?;
@@ -129,11 +117,10 @@ fn main() -> Result<(), Error> {
         .expect("Application::new failed");
     uiapp.connect_activate(|app| {
         let win = gtk::ApplicationWindow::new(app);
-        let buttons: Vec<gtk::Button> = vec![];
         win.set_default_size(320, 200);
         win.set_title("Calculator");
-        let arrowup: libhandy::Arrows = libhandy::Arrows::new();
-        let arrowclone = arrowup.clone();
+        //let arrowup: libhandy::Arrows = libhandy::Arrows::new();
+        //let arrowclone = arrowup.clone();
         let container = Box::new(gtk::Orientation::Vertical, 5);
         let displayrow = Box::new(gtk::Orientation::Horizontal, 5);
         let buttonrow1 = Box::new(gtk::Orientation::Horizontal, 5);
@@ -141,11 +128,11 @@ fn main() -> Result<(), Error> {
         let buttonrow3 = Box::new(gtk::Orientation::Horizontal, 5);
         let buttonrow4 = Box::new(gtk::Orientation::Horizontal, 5);
 
-        let mut x: Vec<String> = vec![];
-        x.push("1".to_string());
-        x.push("+".to_string());
-        x.push("1".to_string());
-        infix_to_postfix(x);
+        let mut x: Vec<Token> = vec![];
+        x.push(Token::new(TokenType::Number, 1,std::string::String::from("")));
+        //x.push("+".to_string());
+        //x.push("1".to_string());
+        //infix_to_postfix(x);
 
         let display = gtk::Entry::new();
         display.set_size_request(330, 10);
