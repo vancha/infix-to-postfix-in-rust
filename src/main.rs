@@ -40,14 +40,14 @@ Print(ele);
 */
 
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 enum TokenType {
     Number,
     Operator,
     LeftParenthesis,
     RightParenthesis,
 }
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct Token {
     tokentype: TokenType,
     numbervalue: i32,
@@ -86,14 +86,14 @@ impl Token {
 }
 
 fn infix_to_postfix(token_list: Vec<&Token>) {
-    let outputqueue: std::collections::VecDeque<Token> = std::collections::VecDeque::new();
-    let operatorstack: Vec<Token> = Vec::new();
+    let mut outputqueue: std::collections::VecDeque<&Token> = std::collections::VecDeque::new();
+    let mut operatorstack: Vec<&Token> = Vec::new();
     for token in token_list {
         if token.is_number() {
-            
+            outputqueue.push_back(token);
         }
         if token.is_operator() {
-        
+            
         }
         
         if token.is_left_parenthesis() {
@@ -165,7 +165,6 @@ fn main() -> Result<(), Error> {
 
         displayrow.pack_start(&display, true, true, 5);
 
-        //buttonrow1.add(&button7);
         buttonrow1.pack_start(&button7, true, true, 5);
         buttonrow1.pack_start(&button8, true, true, 5);
         buttonrow1.pack_start(&button9, true, true, 5);
@@ -200,15 +199,6 @@ fn main() -> Result<(), Error> {
         container.pack_start(&buttonrow4, true, true, 5);
 
         win.add(&container);
-
-        /*let label = gtk::Label::new(Some("tet"));
-        let label2 = label.clone();
-        let button = gtk::Button::new_with_label("test");
-        button.connect_clicked(move |but| { label2.set_label("Button has been clicked!");arrowup.animate(); });
-        container.add(&arrowclone);
-        container.add(&button);
-        container.add(&label);
-        win.add(&container);*/
         win.show_all();
     });
     uiapp.run(&env::args().collect::<Vec<_>>());
