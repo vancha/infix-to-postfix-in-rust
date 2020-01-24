@@ -77,8 +77,48 @@ impl Token {
             _ => false,
         }
     }
-    fn has_lower_precedence(&self, other: &Token)-> bool {
-        false
+    
+    /* this is horrible, change this */
+    fn has_greater_precedence_than(&self, other: &Token)-> bool {
+        match self.stringvalue.as_str() {
+            "*" => {
+                match other.stringvalue.as_str() {
+                    "+" => true,
+                    "-" => true,
+                    _ => false,
+                }
+            },
+            "-" => {
+                match other.stringvalue.as_str() {
+                    _ => false,
+                }    
+            },
+            "/" => {
+                match other.stringvalue.as_str() {
+                    "*" => false,
+                    _ => true,
+                }
+            },
+            "+" => {
+                match other.stringvalue.as_str() {
+                    "-" => true,
+                    _ => false,
+                }
+            },
+            "(" => {
+                match other.stringvalue.as_str() {
+                    _ => true,
+                }
+            },
+            ")" => {
+                match other.stringvalue.as_str() {
+                    _ => true,
+                }
+            },
+            _ => {
+                return false
+            }
+        }
     }
     
     fn is_right_parenthesis(&self) -> bool  {
@@ -112,7 +152,7 @@ fn infix_to_postfix(token_list: Vec<&Token>)->std::collections::VecDeque<&Token>
         }
         if token.is_operator() {
             println!("Token is operator");
-            while(!operatorstack.is_empty() && !operatorstack.last().unwrap().has_lower_precedence(token)) {
+            while(!operatorstack.is_empty() && operatorstack.last().unwrap().has_greater_precedence_than(token)) {
                 println!("token on stack has higher precedence, pushing the one on stack to queue");
                 outputqueue.push_back(operatorstack.pop().unwrap());
             }
@@ -158,16 +198,20 @@ fn main() -> Result<(), Error> {
         let buttonrow4 = Box::new(gtk::Orientation::Horizontal, 5);
 
         let mut x: Vec<&Token> = vec![];
-        let u = Token::new(TokenType::Number, 1,std::string::String::from(""));
-        let plus = Token::new(TokenType::Operator, 0,std::string::String::from("+"));
-        let u2 = Token::new(TokenType::Number, 1,std::string::String::from(""));
-        let min = Token::new(TokenType::Operator, 0,std::string::String::from("-"));
-        let u3 = Token::new(TokenType::Number, 1,std::string::String::from(""));
-        x.push(&u);
-        x.push(&plus);
-        x.push(&u2);
-        x.push(&min);
-        x.push(&u3);
+        let t1 = Token::new(TokenType::Number, 1,std::string::String::from(""));
+        let t2 = Token::new(TokenType::Operator, 0,std::string::String::from("+"));
+        let t3 = Token::new(TokenType::Number, 1,std::string::String::from(""));
+        let t4 = Token::new(TokenType::Operator, 0,std::string::String::from("*"));
+        let t5 = Token::new(TokenType::Number, 1,std::string::String::from(""));
+        let t6 = Token::new(TokenType::Operator, 0,std::string::String::from("-"));
+        let t7 = Token::new(TokenType::Number, 1,std::string::String::from(""));
+        x.push(&t1);
+        x.push(&t2);
+        x.push(&t3);
+        x.push(&t4);
+        x.push(&t5);
+        x.push(&t6);
+        x.push(&t7);
         let things = infix_to_postfix(x);
         println!("{:?}",things);
 
