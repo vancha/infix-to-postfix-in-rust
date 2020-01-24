@@ -9,7 +9,7 @@ use gtk::{Box, ContainerExt, WidgetExt};
 //use libhandy;
 //use libhandy::prelude::*;
 use std::env;
-
+use std::fmt;
 /*
  * Consider -
     Stack S
@@ -40,14 +40,14 @@ Print(ele);
 */
 
 
-#[derive(Debug, Clone)]
+#[derive( Clone)]
 enum TokenType {
     Number,
     Operator,
     LeftParenthesis,
     RightParenthesis,
 }
-#[derive(Debug, Clone)]
+#[derive( Clone)]
 struct Token {
     tokentype: TokenType,
     numbervalue: i32,
@@ -77,39 +77,68 @@ impl Token {
             _ => false,
         }
     }
+    fn has_lower_precedence(&self, other: &Token)-> bool {
+        false
+    }
+    
     fn is_right_parenthesis(&self) -> bool  {
        match self.tokentype {
             TokenType::RightParenthesis => true,
             _ => false,
         }
     }
+    
 }
 
-fn infix_to_postfix(token_list: Vec<&Token>) {
-    let mut outputqueue: std::collections::VecDeque<&Token> = std::collections::VecDeque::new();
-    let mut operatorstack: Vec<&Token> = Vec::new();
-    for token in token_list {
-        if token.is_number() {
-            outputqueue.push_back(token);
-        }
-        if token.is_operator() {
-            
-        }
-        
-        if token.is_left_parenthesis() {
-        
-        }
-        if token.is_right_parenthesis() {
-        
+impl fmt::Debug for Token {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        //write!(f, "Point {{ x: {}, y: {} }}", self.x, self.y)
+        match self.tokentype {
+            TokenType::Number => write!(f,"{}",self.numbervalue),
+            _ => write!(f,"{}",self.stringvalue),
         }
     }
 }
 
-
-/**
- * This method implements the shunting yard algorithm for converting infix to postfix
- * */
-
+fn infix_to_postfix(token_list: Vec<&Token>)->std::collections::VecDeque<&Token> {
+    let mut outputqueue: std::collections::VecDeque<&Token> = std::collections::VecDeque::new();
+    let mut operatorstack: Vec<&Token> = Vec::new();
+    
+    for token in token_list {
+        println!("Reading token.");
+        if token.is_number() {
+            println!("Token is number, pushing to queue");
+            outputqueue.push_back(token);
+        }
+        if token.is_operator() {
+            println!("Token is operator");
+            while(!operatorstack.is_empty() && !operatorstack.last().unwrap().has_lower_precedence(token)) {
+                println!("token on stack has higher precedence, pushing the one on stack to queue");
+                outputqueue.push_back(operatorstack.pop().unwrap());
+            }
+            println!("pushing operator to stack");
+            operatorstack.push(token);
+        }
+        
+        if token.is_left_parenthesis() {
+            println!("Token is left paren, pushing to stack");
+            operatorstack.push(token);
+        }
+        if token.is_right_parenthesis() {
+            println!("Token is right paren");
+            while(!operatorstack.last().unwrap().is_left_parenthesis()) {
+                println!("Token is right paren");
+                outputqueue.push_back(operatorstack.pop().unwrap());    
+            }
+            operatorstack.pop();
+        }
+    }
+    while(!operatorstack.is_empty()) {
+        println!("there's an operator on the stack left, pushing it to the queue");
+        outputqueue.push_back(operatorstack.pop().unwrap());
+    }
+    outputqueue
+}
 
 fn main() -> Result<(), Error> {
     gtk::init()?;
@@ -128,11 +157,19 @@ fn main() -> Result<(), Error> {
         let buttonrow3 = Box::new(gtk::Orientation::Horizontal, 5);
         let buttonrow4 = Box::new(gtk::Orientation::Horizontal, 5);
 
-        let mut x: Vec<Token> = vec![];
-        x.push(Token::new(TokenType::Number, 1,std::string::String::from("")));
-        //x.push("+".to_string());
-        //x.push("1".to_string());
-        //infix_to_postfix(x);
+        let mut x: Vec<&Token> = vec![];
+        let u = Token::new(TokenType::Number, 1,std::string::String::from(""));
+        let plus = Token::new(TokenType::Operator, 0,std::string::String::from("+"));
+        let u2 = Token::new(TokenType::Number, 1,std::string::String::from(""));
+        let min = Token::new(TokenType::Operator, 0,std::string::String::from("-"));
+        let u3 = Token::new(TokenType::Number, 1,std::string::String::from(""));
+        x.push(&u);
+        x.push(&plus);
+        x.push(&u2);
+        x.push(&min);
+        x.push(&u3);
+        let things = infix_to_postfix(x);
+        println!("{:?}",things);
 
         let display = gtk::Entry::new();
         display.set_size_request(330, 10);
