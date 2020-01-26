@@ -10,6 +10,8 @@ use gtk::{Box, ContainerExt, WidgetExt};
 //use libhandy::prelude::*;
 use std::env;
 use std::fmt;
+
+use std::collections::HashMap;
 /*
  * Consider -
     Stack S
@@ -40,22 +42,20 @@ Print(ele);
 */
 
 
-#[derive( Clone)]
+#[derive(Debug)]
 enum TokenType {
     Number,
     Operator,
     LeftParenthesis,
     RightParenthesis,
 }
-#[derive( Clone)]
 struct Token {
     tokentype: TokenType,
-    numbervalue: i32,
-    stringvalue: String,
+    value: String,
 }
 impl Token {
-    fn new(tokentype: TokenType, numbervalue: i32, stringvalue: String) -> Self {
-        Token {tokentype, numbervalue, stringvalue }
+    fn new(tokentype: TokenType, value: String) -> Self {
+        Token {tokentype, value }
         
     }
     fn is_operator(&self) -> bool {
@@ -80,45 +80,18 @@ impl Token {
     
     /* this is horrible, change this */
     fn has_greater_precedence_than(&self, other: &Token)-> bool {
-        match self.stringvalue.as_str() {
-            "*" => {
-                match other.stringvalue.as_str() {
-                    "+" => true,
-                    "-" => true,
-                    _ => false,
-                }
-            },
-            "-" => {
-                match other.stringvalue.as_str() {
-                    _ => false,
-                }    
-            },
-            "/" => {
-                match other.stringvalue.as_str() {
-                    "*" => false,
-                    _ => true,
-                }
-            },
-            "+" => {
-                match other.stringvalue.as_str() {
-                    "-" => true,
-                    _ => false,
-                }
-            },
-            "(" => {
-                match other.stringvalue.as_str() {
-                    _ => true,
-                }
-            },
-            ")" => {
-                match other.stringvalue.as_str() {
-                    _ => true,
-                }
-            },
-            _ => {
-                return false
-            }
-        }
+     let mut precedence = HashMap::new();
+     precedence.insert("^".to_string(),4);
+     precedence.insert("*".to_string(),3);
+     precedence.insert("/".to_string(),3);
+     precedence.insert("+".to_string(),2);
+     precedence.insert("-".to_string(),2);
+     if(precedence.get(&self.value) >= precedence.get(&other.value) && &self.value != &other.value) { 
+        //println!("{} has higher precedence than {}",&self.value, &other.value);
+        return true; 
+     } 
+    //println!("{} has lower precedence than {}",&self.value, &other.value);
+     false
     }
     
     fn is_right_parenthesis(&self) -> bool  {
@@ -127,16 +100,11 @@ impl Token {
             _ => false,
         }
     }
-    
 }
 
 impl fmt::Debug for Token {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        //write!(f, "Point {{ x: {}, y: {} }}", self.x, self.y)
-        match self.tokentype {
-            TokenType::Number => write!(f,"{}",self.numbervalue),
-            _ => write!(f,"{}",self.stringvalue),
-        }
+        write!(f,"{}",self.value)
     }
 }
 
@@ -145,36 +113,37 @@ fn infix_to_postfix(token_list: Vec<&Token>)->std::collections::VecDeque<&Token>
     let mut operatorstack: Vec<&Token> = Vec::new();
     
     for token in token_list {
-        println!("Reading token.");
         if token.is_number() {
-            println!("Token is number, pushing to queue");
+            //println!("Token is number {}, pushing to queue", token.value);
             outputqueue.push_back(token);
         }
         if token.is_operator() {
-            println!("Token is operator");
-            while(!operatorstack.is_empty() && operatorstack.last().unwrap().has_greater_precedence_than(token)) {
-                println!("token on stack has higher precedence, pushing the one on stack to queue");
+            //println!("Token is operator{}",token.value);
+            while(!operatorstack.is_empty() && operatorstack.last().unwrap().has_greater_precedence_than(token)  && operatorstack.last().unwrap().value != "(") {
+                println!("{:?} has higher precedence than {:?}",operatorstack.last().unwrap().value, token.value );
                 outputqueue.push_back(operatorstack.pop().unwrap());
             }
-            println!("pushing operator to stack");
+            //println!("pushing operator to stack");
             operatorstack.push(token);
         }
         
         if token.is_left_parenthesis() {
-            println!("Token is left paren, pushing to stack");
+            //println!("Token is left paren, pushing to stack");
             operatorstack.push(token);
         }
         if token.is_right_parenthesis() {
-            println!("Token is right paren");
+            //println!("Token is right paren");
+            //println!("current operatorstack looks like {:?}",operatorstack);
             while(!operatorstack.last().unwrap().is_left_parenthesis()) {
-                println!("Token is right paren");
-                outputqueue.push_back(operatorstack.pop().unwrap());    
+                //println!("{} is not left paren, so pushing it to outputqueue.",operatorstack.last().unwrap().value);
+                outputqueue.push_back(operatorstack.pop().unwrap());
+                
             }
             operatorstack.pop();
         }
     }
     while(!operatorstack.is_empty()) {
-        println!("there's an operator on the stack left, pushing it to the queue");
+        //println!("there's an operator ({:?}) on the stack left, pushing it to the queue",operatorstack.last().unwrap());
         outputqueue.push_back(operatorstack.pop().unwrap());
     }
     outputqueue
@@ -198,13 +167,21 @@ fn main() -> Result<(), Error> {
         let buttonrow4 = Box::new(gtk::Orientation::Horizontal, 5);
 
         let mut x: Vec<&Token> = vec![];
-        let t1 = Token::new(TokenType::Number, 1,std::string::String::from(""));
-        let t2 = Token::new(TokenType::Operator, 0,std::string::String::from("+"));
-        let t3 = Token::new(TokenType::Number, 1,std::string::String::from(""));
-        let t4 = Token::new(TokenType::Operator, 0,std::string::String::from("*"));
-        let t5 = Token::new(TokenType::Number, 1,std::string::String::from(""));
-        let t6 = Token::new(TokenType::Operator, 0,std::string::String::from("-"));
-        let t7 = Token::new(TokenType::Number, 1,std::string::String::from(""));
+        let t1 = Token::new(TokenType::Number, std::string::String::from("3"));
+        let t2 = Token::new(TokenType::Operator, std::string::String::from("+"));
+        let t3 = Token::new(TokenType::Number, std::string::String::from("4"));
+        let t4 = Token::new(TokenType::Operator, std::string::String::from("*"));
+        let t5 = Token::new(TokenType::Number, std::string::String::from("2"));
+        let t6 = Token::new(TokenType::Operator, std::string::String::from("/"));
+        let t7 = Token::new(TokenType::LeftParenthesis, std::string::String::from("("));
+        let t8 = Token::new(TokenType::Number, std::string::String::from("1"));
+        let t9 = Token::new(TokenType::Operator, std::string::String::from("-"));
+        let t10 = Token::new(TokenType::Number, std::string::String::from("5"));
+        let t11 = Token::new(TokenType::RightParenthesis, std::string::String::from(")"));
+        let t12 = Token::new(TokenType::Operator, std::string::String::from("^"));
+        let t13 = Token::new(TokenType::Number, std::string::String::from("2"));
+        let t14 = Token::new(TokenType::Operator, std::string::String::from("^"));
+        let t15 = Token::new(TokenType::Number, std::string::String::from("3"));
         x.push(&t1);
         x.push(&t2);
         x.push(&t3);
@@ -212,6 +189,16 @@ fn main() -> Result<(), Error> {
         x.push(&t5);
         x.push(&t6);
         x.push(&t7);
+        x.push(&t8);
+        x.push(&t9); 
+        x.push(&t10);
+        x.push(&t11);
+        x.push(&t12);
+        x.push(&t13);
+        x.push(&t14);
+        x.push(&t15);
+        
+        println!("{:?}",x);
         let things = infix_to_postfix(x);
         println!("{:?}",things);
 
