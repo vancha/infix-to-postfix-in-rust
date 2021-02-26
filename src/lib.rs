@@ -29,6 +29,7 @@ Print(ele);
 }
 */
 
+#[derive(Debug)] 
 enum TokenType {
     Number,
     Operator,
@@ -78,6 +79,16 @@ impl Token {
         }
     }
 
+    fn is_right_parenthesis(&self) -> bool {
+    	// this comparision doesn't work -.-
+    	// self.tokentype == TokenType::RightParenthesis
+
+        match self.tokentype {
+            TokenType::RightParenthesis => true,
+            _ => false,
+        }
+    }
+
     /* this is horrible, change this */
     fn has_greater_precedence_than(&self, other: &Token) -> bool {
         let mut precedence = HashMap::new();
@@ -91,16 +102,6 @@ impl Token {
         
         return precedence.get(&self.value) >= precedence.get(&other.value)
             && &self.value != &other.value;
-    }
-
-    fn is_right_parenthesis(&self) -> bool {
-    	// this comparision doesn't work -.-
-    	// self.tokentype == TokenType::RightParenthesis
-
-        match self.tokentype {
-            TokenType::RightParenthesis => true,
-            _ => false,
-        }
     }
 }
 
@@ -121,9 +122,6 @@ fn str_to_token(infix: Vec<&str>) -> Vec<Token> {
 	let mut token_list: Vec<Token> = vec![];
 
 	for item in infix {
-		// let token = lib::Token::new(lib::TokenType::Number, item.to_string());		
-		// let token = item.chars().into();
-		// let token = item.chars().map(|c| c.into()).collect::<Vec<lib::Token>>()[0];
 		let token = item.to_string().parse::<u32>();
 		let token = match token {
 			Ok(_) => Token::new(TokenType::Number, item.to_string()),
@@ -134,7 +132,6 @@ fn str_to_token(infix: Vec<&str>) -> Vec<Token> {
 			}
 		};
 		token_list.push(token);
-		// println!("{}", item);
 	}
 
 	token_list
@@ -145,14 +142,12 @@ pub fn infix_to_postfix(infix_list: Vec<&str>) -> std::collections::VecDeque<Tok
     let mut operatorstack: Vec<Token> = Vec::new();
     let token_list: Vec<Token> = str_to_token(infix_list);
 
-    // let mut counter = 0;
-
     for token in token_list {
-    	// counter = counter + 1;
-    	// println!("counter: {}", counter);
+	    
         if token.is_number() {
             outputqueue.push_back(token);
         }
+	    
         else if token.is_operator() {
             while !operatorstack.is_empty()
                 && operatorstack
@@ -161,33 +156,24 @@ pub fn infix_to_postfix(infix_list: Vec<&str>) -> std::collections::VecDeque<Tok
                     .has_greater_precedence_than(&token)
                 && operatorstack.last().unwrap().value != "("
             {
-                // println!(
-                //     "{:?} has higher precedence than {:?}",
-                //     operatorstack.last().unwrap().value,
-                //     token.value
-                // );
                 outputqueue.push_back(operatorstack.pop().unwrap());
             }
-            //println!("pushing operator to stack");
             operatorstack.push(token);
         }
 
         else if token.is_left_parenthesis() {
-            //println!("Token is left paren, pushing to stack");
             operatorstack.push(token);
         }
+	    
         else if token.is_right_parenthesis() {
-            //println!("Token is right paren");
-            //println!("current operatorstack looks like {:?}",operatorstack);
             while !operatorstack.last().unwrap().is_left_parenthesis() {
-                //println!("{} is not left paren, so pushing it to outputqueue.",operatorstack.last().unwrap().value);
                 outputqueue.push_back(operatorstack.pop().unwrap());
             }
             operatorstack.pop();
         }
+	    
     }
     while !operatorstack.is_empty() {
-        //println!("there's an operator ({:?}) on the stack left, pushing it to the queue",operatorstack.last().unwrap());
         outputqueue.push_back(operatorstack.pop().unwrap());
     }
     outputqueue
