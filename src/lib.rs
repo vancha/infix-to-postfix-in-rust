@@ -9,7 +9,7 @@ enum TokenType {
     RightParenthesis,
 }
 
-pub struct Token {
+struct Token {
     tokentype: TokenType,
 }
 
