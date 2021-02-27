@@ -94,11 +94,8 @@ impl Token {
         match &self.tokentype {
             TokenType::Operator(val) => val.clone(),
             _ => panic!("Should be called only on operator")
+        }
     }
-
-}
-
-
 }
 
 impl fmt::Debug for Token {
@@ -109,14 +106,14 @@ impl fmt::Debug for Token {
 
 fn str_to_token(infix: Vec<&str>) -> Vec<Token> {
 
-	let mut token_list: Vec<Token> = vec![];
+    let mut token_list: Vec<Token> = vec![];
 
-	for item in infix {
-		let token = Token::new(item);
-		token_list.push(token);
-	}
+    for item in infix {
+        let token = Token::new(item);
+        token_list.push(token);
+    }
 
-	token_list
+    token_list
 }
 
 pub fn infix_to_postfix(infix_list: Vec<&str>) -> Vec<String> {// std::collections::VecDeque<Token> {
@@ -125,11 +122,11 @@ pub fn infix_to_postfix(infix_list: Vec<&str>) -> Vec<String> {// std::collectio
     let token_list: Vec<Token> = str_to_token(infix_list);
 
     for token in token_list {
-	    
+        
         if token.is_number() {
             outputqueue.push_back(token);
         }
-	    
+        
         else if token.is_operator() {
             while !operatorstack.is_empty()
                 && operatorstack
@@ -146,14 +143,14 @@ pub fn infix_to_postfix(infix_list: Vec<&str>) -> Vec<String> {// std::collectio
         else if token.is_left_parenthesis() {
             operatorstack.push(token);
         }
-	    
+        
         else if token.is_right_parenthesis() {
             while !operatorstack.last().unwrap().is_left_parenthesis() {
                 outputqueue.push_back(operatorstack.pop().unwrap());
             }
             operatorstack.pop();
         }
-	    
+        
     }
 
     while !operatorstack.is_empty() {
@@ -170,7 +167,7 @@ pub fn infix_to_postfix(infix_list: Vec<&str>) -> Vec<String> {// std::collectio
             TokenType::Number(num) => num.to_string(),
             _ => panic!("Nothing else should be the value")
         };
-    	output.push(item);
+        output.push(item);
     }
     let output = output;
     output
@@ -186,10 +183,10 @@ mod tests {
     #[test]
     fn test() {
 
-    	assert_eq!(infix_to_postfix(vec!["3", "+", "4", "*", "2",
-	"/", "(", "1", "-", "5", ")",
-	"^", "2", "^", "3"]),
-    	 vec!["3", "4", "2", "*", "1", "5", "-", "2", "3", "^", "^", "/", "+"]);
+        assert_eq!(infix_to_postfix(vec!["3", "+", "4", "*", "2",
+    "/", "(", "1", "-", "5", ")",
+    "^", "2", "^", "3"]),
+         vec!["3", "4", "2", "*", "1", "5", "-", "2", "3", "^", "^", "/", "+"]);
 
     }
 }
