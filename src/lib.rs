@@ -125,7 +125,7 @@ fn str_to_token(infix: Vec<&str>) -> Vec<Token> {
 
     token_list
 }
-/// Turns a vec of &str's in infix notation, to a vec of String's in postfix notation
+/// Turns a Vec<&str> in infix notation, to a Vec<String> in postfix notation
 ///
 /// Does not perform the actual evaluation expression, but can be used to change an expression from
 /// infix notation, to postfix for easier evaluation.
