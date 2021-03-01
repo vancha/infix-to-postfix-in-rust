@@ -185,21 +185,24 @@ mod tests {
     #[test]
     fn basics_work() {
         assert_eq!(infix_to_postfix(vec!["1", "+", "1"]), vec!["1", "1", "+"]);
-        fn parenthesis_work() {
-            assert_eq!(
-                infix_to_postfix(vec!["1", "*", "(", "7", "-", "2", ")"]),
-                vec!["1", "7", "2", "-", "*"]
-            );
-        }
-        fn nested_parenthesis_work() {
-            assert_eq!(
-                infix_to_postfix(vec![
-                    "1", "*", "(", "7", "-", "2", "+", "(", "1", "+", "1", ")", ")"
-                ]),
-                vec!["1", "7", "2", "-", "1", "1", "+", "+", "*"]
-            );
-        }
     }
+    #[test]
+    fn parenthesis_work() {
+        assert_eq!(
+            infix_to_postfix(vec!["1", "*", "(", "7", "-", "2", ")"]),
+            vec!["1", "7", "2", "-", "*"]
+        );
+    }
+    #[test]
+    fn nested_parenthesis_work() {
+        assert_eq!(
+            infix_to_postfix(vec![
+                "1", "*", "(", "7", "-", "2", "+", "(", "1", "+", "1", ")", ")"
+            ]),
+            vec!["1", "7", "2", "-", "1", "1", "+", "+", "*"]
+        );
+    }
+
     #[test]
     fn test() {
         assert_eq!(
