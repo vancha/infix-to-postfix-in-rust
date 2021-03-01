@@ -14,49 +14,64 @@ struct Token {
 }
 
 impl Token {
-
-    fn new(token_type: &str) -> Self { 
+    fn new(token_type: &str) -> Self {
         let token = token_type.to_string().parse::<i32>();
         match token {
-            Ok(value) => Token { tokentype: TokenType::Number(value) },
+            Ok(value) => Token {
+                tokentype: TokenType::Number(value),
+            },
             _ => match token_type {
-                "(" => Token { tokentype: TokenType::LeftParenthesis },
-                ")" => Token { tokentype: TokenType::RightParenthesis },
-                "^" => Token { tokentype: TokenType::Operator("^".to_string()) },
-                "*" => Token { tokentype: TokenType::Operator("*".to_string()) },
-                "/" => Token { tokentype: TokenType::Operator("/".to_string()) },
-                "+" => Token { tokentype: TokenType::Operator("+".to_string()) },
-                "-" => Token { tokentype: TokenType::Operator("-".to_string()) },
-                _ => panic!("Don't use invalid values") 
-            }
+                "(" => Token {
+                    tokentype: TokenType::LeftParenthesis,
+                },
+                ")" => Token {
+                    tokentype: TokenType::RightParenthesis,
+                },
+                "^" => Token {
+                    tokentype: TokenType::Operator("^".to_string()),
+                },
+                "*" => Token {
+                    tokentype: TokenType::Operator("*".to_string()),
+                },
+                "/" => Token {
+                    tokentype: TokenType::Operator("/".to_string()),
+                },
+                "+" => Token {
+                    tokentype: TokenType::Operator("+".to_string()),
+                },
+                "-" => Token {
+                    tokentype: TokenType::Operator("-".to_string()),
+                },
+                _ => panic!("Don't use invalid values"),
+            },
         }
     }
 
     fn is_operator(&self) -> bool {
         match self.tokentype {
             TokenType::Operator(_) => true,
-            _ => false
+            _ => false,
         }
     }
 
     fn is_number(&self) -> bool {
         match self.tokentype {
             TokenType::Number(_) => true,
-            _ => false
+            _ => false,
         }
     }
 
     fn is_left_parenthesis(&self) -> bool {
         match self.tokentype {
             TokenType::LeftParenthesis => true,
-            _ => false
+            _ => false,
         }
     }
 
     fn is_right_parenthesis(&self) -> bool {
         match self.tokentype {
             TokenType::RightParenthesis => true,
-            _ => false
+            _ => false,
         }
     }
 
@@ -81,19 +96,17 @@ impl Token {
 
         let other_token_type = match &other.tokentype {
             TokenType::Operator(val) => val,
-            _ => panic!("TokenType should be other operator")
+            _ => panic!("TokenType should be other operator"),
         };
 
         return precedence.get::<str>(&self_token_type) >= precedence.get::<str>(&other_token_type)
             && &self_token_type != other_token_type;
-
     }
 
-    
     fn operator_value(&self) -> String {
         match &self.tokentype {
             TokenType::Operator(val) => val.clone(),
-            _ => panic!("Should be called only on operator")
+            _ => panic!("Should be called only on operator"),
         }
     }
 }
@@ -105,7 +118,6 @@ impl fmt::Debug for Token {
 }
 
 fn str_to_token(infix: Vec<&str>) -> Vec<Token> {
-
     let mut token_list: Vec<Token> = vec![];
 
     for item in infix {
@@ -116,18 +128,16 @@ fn str_to_token(infix: Vec<&str>) -> Vec<Token> {
     token_list
 }
 
-pub fn infix_to_postfix(infix_list: Vec<&str>) -> Vec<String> {// std::collections::VecDeque<Token> {
+pub fn infix_to_postfix(infix_list: Vec<&str>) -> Vec<String> {
+    // std::collections::VecDeque<Token> {
     let mut outputqueue: std::collections::VecDeque<Token> = std::collections::VecDeque::new();
     let mut operatorstack: Vec<Token> = Vec::new();
     let token_list: Vec<Token> = str_to_token(infix_list);
 
     for token in token_list {
-        
         if token.is_number() {
             outputqueue.push_back(token);
-        }
-        
-        else if token.is_operator() {
+        } else if token.is_operator() {
             while !operatorstack.is_empty()
                 && operatorstack
                     .last()
@@ -138,19 +148,14 @@ pub fn infix_to_postfix(infix_list: Vec<&str>) -> Vec<String> {// std::collectio
                 outputqueue.push_back(operatorstack.pop().unwrap());
             }
             operatorstack.push(token);
-        }
-
-        else if token.is_left_parenthesis() {
+        } else if token.is_left_parenthesis() {
             operatorstack.push(token);
-        }
-        
-        else if token.is_right_parenthesis() {
+        } else if token.is_right_parenthesis() {
             while !operatorstack.last().unwrap().is_left_parenthesis() {
                 outputqueue.push_back(operatorstack.pop().unwrap());
             }
             operatorstack.pop();
         }
-        
     }
 
     while !operatorstack.is_empty() {
@@ -159,21 +164,19 @@ pub fn infix_to_postfix(infix_list: Vec<&str>) -> Vec<String> {// std::collectio
 
     // outputqueue
 
-    // Omit this part if return value should be std::collections::VecDeque<Token> instead of Vec<String>    
+    // Omit this part if return value should be std::collections::VecDeque<Token> instead of Vec<String>
     let mut output: Vec<String> = Vec::new();
     for item in outputqueue {
         let item = match item.tokentype {
             TokenType::Operator(val) => val,
             TokenType::Number(num) => num.to_string(),
-            _ => panic!("Nothing else should be the value")
+            _ => panic!("Nothing else should be the value"),
         };
         output.push(item);
     }
     let output = output;
     output
     //
-    
-
 }
 
 #[cfg(test)]
@@ -182,11 +185,11 @@ mod tests {
 
     #[test]
     fn test() {
-
-        assert_eq!(infix_to_postfix(vec!["3", "+", "4", "*", "2",
-    "/", "(", "1", "-", "5", ")",
-    "^", "2", "^", "3"]),
-         vec!["3", "4", "2", "*", "1", "5", "-", "2", "3", "^", "^", "/", "+"]);
-
+        assert_eq!(
+            infix_to_postfix(vec![
+                "3", "+", "4", "*", "2", "/", "(", "1", "-", "5", ")", "^", "2", "^", "3"
+            ]),
+            vec!["3", "4", "2", "*", "1", "5", "-", "2", "3", "^", "^", "/", "+"]
+        );
     }
 }
