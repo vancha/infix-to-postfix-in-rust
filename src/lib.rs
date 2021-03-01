@@ -126,7 +126,11 @@ fn str_to_token(infix: Vec<&str>) -> Vec<Token> {
 
     token_list
 }
-
+/// Turns a vec of &str's in infix notation, to a vec of String's in postfix notation
+/// # Example:
+/// ```
+/// assert_eq!(infix_to_postfix(vec!["1","+","1"]),vec!["1","1","+"]);
+/// ```
 pub fn infix_to_postfix(infix_list: Vec<&str>) -> Vec<String> {
     // std::collections::VecDeque<Token> {
     let mut outputqueue: std::collections::VecDeque<Token> = std::collections::VecDeque::new();
