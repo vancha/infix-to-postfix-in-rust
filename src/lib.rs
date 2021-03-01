@@ -87,7 +87,6 @@ impl Token {
         let self_token_type = match &self.tokentype {
             TokenType::Operator(val) => val.clone(),
             TokenType::LeftParenthesis => "(".to_string().clone(),
-            TokenType::RightParenthesis => ")".to_string().clone(),
             _ => {
                 println!("{:?}", self.tokentype);
                 panic!("TokenType should be self operator")
@@ -182,18 +181,24 @@ pub fn infix_to_postfix(infix_list: Vec<&str>) -> Vec<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
-    #[test]
-    fn basics_work(){
-        assert_eq!(infix_to_postfix(vec![
-                   "1", "+", "1"
-               ]),
-               vec!["1", "1", "+"]
-    );
-    fn parenthesis_work(){
-        assert_eq!(infix_to_postfix(vec!["1","*","(","7","-","2",")"]),vec!["1","7","2","-","*"]);
-    }
 
+    #[test]
+    fn basics_work() {
+        assert_eq!(infix_to_postfix(vec!["1", "+", "1"]), vec!["1", "1", "+"]);
+        fn parenthesis_work() {
+            assert_eq!(
+                infix_to_postfix(vec!["1", "*", "(", "7", "-", "2", ")"]),
+                vec!["1", "7", "2", "-", "*"]
+            );
+        }
+        fn nested_parenthesis_work() {
+            assert_eq!(
+                infix_to_postfix(vec![
+                    "1", "*", "(", "7", "-", "2", "+", "(", "1", "+", "1", ")", ")"
+                ]),
+                vec!["1", "7", "2", "-", "1", "1", "+", "+", "*"]
+            );
+        }
     }
     #[test]
     fn test() {
