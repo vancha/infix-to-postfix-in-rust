@@ -1,5 +1,5 @@
 [package]
-name = "gtktest"
+name = "infixtopostfix"
 version = "0.1.0"
 authors = ["vancha"]
 edition = "2018"

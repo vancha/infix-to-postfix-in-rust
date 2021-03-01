@@ -8,7 +8,6 @@ enum TokenType {
     LeftParenthesis,
     RightParenthesis,
 }
-
 struct Token {
     tokentype: TokenType,
 }
@@ -127,10 +126,13 @@ fn str_to_token(infix: Vec<&str>) -> Vec<Token> {
     token_list
 }
 /// Turns a vec of &str's in infix notation, to a vec of String's in postfix notation
+///
+/// Does not perform the actual evaluation expression, but can be used to change an expression from
+/// infix notation, to postfix for easier evaluation.
 /// # Example:
 /// ``` 
-/// use gtktest;
-/// assert_eq!(gtktest::infix_to_postfix(vec!["1","+","1"]),vec!["1","1","+"]);
+/// use infixtopostfix;
+/// assert_eq!(infixtopostfix::infix_to_postfix(vec!["1","+","1"]),vec!["1","1","+"]);
 /// ```
 pub fn infix_to_postfix(infix_list: Vec<&str>) -> Vec<String> {
     let mut outputqueue: std::collections::VecDeque<Token> = std::collections::VecDeque::new();
