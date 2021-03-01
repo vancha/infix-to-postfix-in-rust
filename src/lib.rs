@@ -128,11 +128,11 @@ fn str_to_token(infix: Vec<&str>) -> Vec<Token> {
 }
 /// Turns a vec of &str's in infix notation, to a vec of String's in postfix notation
 /// # Example:
-/// ```
-/// assert_eq!(infix_to_postfix(vec!["1","+","1"]),vec!["1","1","+"]);
+/// ``` 
+/// use gtktest;
+/// assert_eq!(gtktest::infix_to_postfix(vec!["1","+","1"]),vec!["1","1","+"]);
 /// ```
 pub fn infix_to_postfix(infix_list: Vec<&str>) -> Vec<String> {
-    // std::collections::VecDeque<Token> {
     let mut outputqueue: std::collections::VecDeque<Token> = std::collections::VecDeque::new();
     let mut operatorstack: Vec<Token> = Vec::new();
     let token_list: Vec<Token> = str_to_token(infix_list);
@@ -165,9 +165,6 @@ pub fn infix_to_postfix(infix_list: Vec<&str>) -> Vec<String> {
         outputqueue.push_back(operatorstack.pop().unwrap());
     }
 
-    // outputqueue
-
-    // Omit this part if return value should be std::collections::VecDeque<Token> instead of Vec<String>
     let mut output: Vec<String> = Vec::new();
     for item in outputqueue {
         let item = match item.tokentype {
@@ -177,9 +174,8 @@ pub fn infix_to_postfix(infix_list: Vec<&str>) -> Vec<String> {
         };
         output.push(item);
     }
-    let output = output;
+    //let output = output;
     output
-    //
 }
 
 #[cfg(test)]
@@ -188,7 +184,9 @@ mod tests {
 
     #[test]
     fn basics_work() {
-        assert_eq!(infix_to_postfix(vec!["1", "+", "1"]), vec!["1", "1", "+"]);
+        assert_eq!(
+            infix_to_postfix(vec!["1", "+", "1"]), 
+            vec!["1", "1", "+"]);
     }
     #[test]
     fn parenthesis_work() {
