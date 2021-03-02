@@ -116,14 +116,6 @@ impl fmt::Debug for Token {
     }
 }
 
-// #[derive(Debug)]
-// enum TokTyp{
-//  i32,
-//  String
-// }
-
-// impl TokType for String{}
-
 fn str_to_token(infix: &[&str]) -> Vec<Token> {
     let mut token_list: Vec<Token> = vec![];
 
@@ -141,17 +133,14 @@ fn str_to_token(infix: &[&str]) -> Vec<Token> {
 /// # Example:
 /// ```
 /// use infixtopostfix;
-/// assert_eq!(infixtopostfix::infix_to_postfix(vec!["1","+","1"]),vec!["1","1","+"]);
+/// assert_eq!(infixtopostfix::infix_to_postfix(&["1","+","1"]),&["1","1","+"]);
 /// ```
 pub fn infix_to_postfix<'a>(infix_list: &'a [&str]) -> Vec<&'a str> {
-// pub fn infix_to_postfix(infix_list: &[&str]) -> Vec<&str> {//Vec<String> {
-    // std::collections::VecDeque<Token> {
     let mut outputqueue: std::collections::VecDeque<Token> = std::collections::VecDeque::new();
     let mut operatorstack: Vec<Token> = Vec::new();
     let token_list: Vec<Token> = str_to_token(&infix_list);
 
-    println!("infix_list: {:?}", infix_list);
-
+    // this is shunting yard algorithm - START
     for token in token_list {
         if token.is_number() {
             outputqueue.push_back(token);
@@ -175,56 +164,43 @@ pub fn infix_to_postfix<'a>(infix_list: &'a [&str]) -> Vec<&'a str> {
             operatorstack.pop();
         }
     }
-
     while !operatorstack.is_empty() {
         outputqueue.push_back(operatorstack.pop().unwrap());
     }
+    // this is shunting yard algorithm - END
 
-    // outputqueue
-
-    let mut test_output: Vec<&str> = Vec::new();
-    let cloned_input = infix_list.clone();
+    let mut output: Vec<&str> = Vec::new();
     let mut counter = 0;
 
-    // Omit this part if return value should be std::collections::VecDeque<Token> instead of Vec<String>
-    let mut output: Vec<String> = Vec::new();
     for item in outputqueue {
-        let item = match item.tokentype {
+        match item.tokentype {
             TokenType::Operator(val) => {
-                for element in cloned_input {
-                    if *element == &val[..] {
-                        println!("YAY IT MATCHES");
-                        test_output.push(infix_list[counter]);
+                for element in infix_list {
+                    if *element == &val {
+                        output.push(infix_list[counter]);
                         break;
                     }
                     counter += 1;
                 }
                 counter = 0;
                 val
-            },
+            }
             TokenType::Number(num) => {
-                for element in cloned_input {
-                    if *element == &num.to_string()[..] {
-                        println!("YAY IT MATCHES NUMBERS");
-                        test_output.push(infix_list[counter]);
+                for element in infix_list {
+                    if *element == &num.to_string() {
+                        output.push(infix_list[counter]);
                         break;
                     }
                     counter += 1;
                 }
                 counter = 0;
                 num.to_string()
-            },
-            _ => panic!("Nothing else should be the value"),
+            }
+            _ => panic!("Only numbers and operators can be the value at this point"),
         };
-        output.push(item);
     }
 
-    println!("test_output: {:?}", test_output);
-
-    // let output = output;
-    // output
-    //
-    test_output
+    output
 }
 
 #[cfg(test)]
@@ -233,32 +209,32 @@ mod tests {
 
     #[test]
     fn basics_work() {
-        assert_eq!(infix_to_postfix(vec!["1", "+", "1"]), vec!["1", "1", "+"]);
+        assert_eq!(infix_to_postfix(&["1", "+", "1"]), &["1", "1", "+"]);
     }
     #[test]
     fn parenthesis_work() {
         assert_eq!(
-            infix_to_postfix(vec!["1", "*", "(", "7", "-", "2", ")"]),
-            vec!["1", "7", "2", "-", "*"]
+            infix_to_postfix(&["1", "*", "(", "7", "-", "2", ")"]),
+            &["1", "7", "2", "-", "*"]
         );
     }
     #[test]
     fn nested_parenthesis_work() {
         assert_eq!(
-            infix_to_postfix(vec![
+            infix_to_postfix(&[
                 "1", "*", "(", "7", "-", "2", "+", "(", "1", "+", "1", ")", ")"
             ]),
-            vec!["1", "7", "2", "-", "1", "1", "+", "+", "*"]
+            &["1", "7", "2", "-", "1", "1", "+", "+", "*"]
         );
     }
 
     #[test]
     fn test() {
         assert_eq!(
-            infix_to_postfix(vec![
+            infix_to_postfix(&[
                 "3", "+", "4", "*", "2", "/", "(", "1", "-", "5", ")", "^", "2", "^", "3"
             ]),
-            vec!["3", "4", "2", "*", "1", "5", "-", "2", "3", "^", "^", "/", "+"]
+            &["3", "4", "2", "*", "1", "5", "-", "2", "3", "^", "^", "/", "+"]
         );
     }
 }
