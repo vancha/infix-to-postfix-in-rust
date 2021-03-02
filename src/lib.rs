@@ -8,6 +8,7 @@ enum TokenType {
     LeftParenthesis,
     RightParenthesis,
 }
+
 struct Token {
     tokentype: TokenType,
 }
@@ -115,7 +116,15 @@ impl fmt::Debug for Token {
     }
 }
 
-fn str_to_token(infix: Vec<&str>) -> Vec<Token> {
+// #[derive(Debug)]
+// enum TokTyp{
+//  i32,
+//  String
+// }
+
+// impl TokType for String{}
+
+fn str_to_token(infix: &[&str]) -> Vec<Token> {
     let mut token_list: Vec<Token> = vec![];
 
     for item in infix {
@@ -125,19 +134,23 @@ fn str_to_token(infix: Vec<&str>) -> Vec<Token> {
 
     token_list
 }
-/// Turns a Vec<&str> in infix notation, to a Vec<String> in postfix notation
+/// Turns `Vec<&str>` in infix notation, to `Vec<String>` in postfix notation
 ///
 /// Does not perform the actual evaluation expression, but can be used to change an expression from
 /// infix notation, to postfix for easier evaluation.
 /// # Example:
-/// ``` 
+/// ```
 /// use infixtopostfix;
 /// assert_eq!(infixtopostfix::infix_to_postfix(vec!["1","+","1"]),vec!["1","1","+"]);
 /// ```
-pub fn infix_to_postfix(infix_list: Vec<&str>) -> Vec<String> {
+pub fn infix_to_postfix<'a>(infix_list: &'a [&str]) -> Vec<&'a str> {
+// pub fn infix_to_postfix(infix_list: &[&str]) -> Vec<&str> {//Vec<String> {
+    // std::collections::VecDeque<Token> {
     let mut outputqueue: std::collections::VecDeque<Token> = std::collections::VecDeque::new();
     let mut operatorstack: Vec<Token> = Vec::new();
-    let token_list: Vec<Token> = str_to_token(infix_list);
+    let token_list: Vec<Token> = str_to_token(&infix_list);
+
+    println!("infix_list: {:?}", infix_list);
 
     for token in token_list {
         if token.is_number() {
@@ -167,16 +180,51 @@ pub fn infix_to_postfix(infix_list: Vec<&str>) -> Vec<String> {
         outputqueue.push_back(operatorstack.pop().unwrap());
     }
 
+    // outputqueue
+
+    let mut test_output: Vec<&str> = Vec::new();
+    let cloned_input = infix_list.clone();
+    let mut counter = 0;
+
+    // Omit this part if return value should be std::collections::VecDeque<Token> instead of Vec<String>
     let mut output: Vec<String> = Vec::new();
     for item in outputqueue {
         let item = match item.tokentype {
-            TokenType::Operator(val) => val,
-            TokenType::Number(num) => num.to_string(),
+            TokenType::Operator(val) => {
+                for element in cloned_input {
+                    if *element == &val[..] {
+                        println!("YAY IT MATCHES");
+                        test_output.push(infix_list[counter]);
+                        break;
+                    }
+                    counter += 1;
+                }
+                counter = 0;
+                val
+            },
+            TokenType::Number(num) => {
+                for element in cloned_input {
+                    if *element == &num.to_string()[..] {
+                        println!("YAY IT MATCHES NUMBERS");
+                        test_output.push(infix_list[counter]);
+                        break;
+                    }
+                    counter += 1;
+                }
+                counter = 0;
+                num.to_string()
+            },
             _ => panic!("Nothing else should be the value"),
         };
         output.push(item);
     }
-    output
+
+    println!("test_output: {:?}", test_output);
+
+    // let output = output;
+    // output
+    //
+    test_output
 }
 
 #[cfg(test)]
@@ -185,9 +233,7 @@ mod tests {
 
     #[test]
     fn basics_work() {
-        assert_eq!(
-            infix_to_postfix(vec!["1", "+", "1"]), 
-            vec!["1", "1", "+"]);
+        assert_eq!(infix_to_postfix(vec!["1", "+", "1"]), vec!["1", "1", "+"]);
     }
     #[test]
     fn parenthesis_work() {
