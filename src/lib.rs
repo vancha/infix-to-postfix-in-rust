@@ -176,7 +176,6 @@ pub fn infix_to_postfix(infix_list: Vec<&str>) -> Vec<String> {
         };
         output.push(item);
     }
-    //let output = output;
     output
 }
 
