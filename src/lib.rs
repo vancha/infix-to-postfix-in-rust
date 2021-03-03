@@ -2,20 +2,20 @@ use std::collections::HashMap;
 use std::fmt;
 
 #[derive(Debug)]
-enum TokenType {
+enum TokenType<'a> {
     Number(i32),
-    Operator(String),
+    Operator(&'a str),
     LeftParenthesis,
     RightParenthesis,
 }
 
-struct Token {
-    tokentype: TokenType,
+struct Token<'a> {
+    tokentype: TokenType<'a>,
 }
 
-impl Token {
+impl Token<'_> {
     fn new(token_type: &str) -> Self {
-        let token = token_type.to_string().parse::<i32>();
+        let token = token_type.parse::<i32>();
         match token {
             Ok(value) => Self {
                 tokentype: TokenType::Number(value),
@@ -28,19 +28,19 @@ impl Token {
                     tokentype: TokenType::RightParenthesis,
                 },
                 "^" => Self {
-                    tokentype: TokenType::Operator("^".to_string()),
+                    tokentype: TokenType::Operator("^"),
                 },
                 "*" => Self {
-                    tokentype: TokenType::Operator("*".to_string()),
+                    tokentype: TokenType::Operator("*"),
                 },
                 "/" => Self {
-                    tokentype: TokenType::Operator("/".to_string()),
+                    tokentype: TokenType::Operator("/"),
                 },
                 "+" => Self {
-                    tokentype: TokenType::Operator("+".to_string()),
+                    tokentype: TokenType::Operator("+"),
                 },
                 "-" => Self {
-                    tokentype: TokenType::Operator("-".to_string()),
+                    tokentype: TokenType::Operator("-"),
                 },
                 _ => panic!("Don't use invalid values"),
             },
@@ -78,11 +78,11 @@ impl Token {
     // checks for precedence of operators
     fn has_greater_precedence_than(&self, other: &Token) -> bool {
         let mut precedence = HashMap::new();
-        precedence.insert("^".to_string(), 4);
-        precedence.insert("*".to_string(), 3);
-        precedence.insert("/".to_string(), 3);
-        precedence.insert("+".to_string(), 2);
-        precedence.insert("-".to_string(), 2);
+        precedence.insert("^", 4);
+        precedence.insert("*", 3);
+        precedence.insert("/", 3);
+        precedence.insert("+", 2);
+        precedence.insert("-", 2);
 
         let self_token_value = match &self.tokentype {
             TokenType::Operator(val) => val,
@@ -109,13 +109,13 @@ impl Token {
     }
 }
 
-impl fmt::Debug for Token {
+impl fmt::Debug for Token<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{:?}", self.tokentype)
     }
 }
 
-fn str_to_token(infix: &[&str]) -> Vec<Token> {
+fn str_to_token<'a>(infix: &'a [&str]) -> Vec<Token<'a>> {
     let mut token_list: Vec<Token> = vec![];
 
     for item in infix {
@@ -139,37 +139,37 @@ fn str_to_token(infix: &[&str]) -> Vec<Token> {
 /// ```
 pub fn infix_to_postfix<'a>(infix_list: &'a [&str]) -> Vec<&'a str> {
     // "postfix" representation of tokens (not to be returned)
-    let mut tokenstack: Vec<Token> = Vec::new();
-    let mut operatorstack: Vec<Token> = Vec::new();
+    let mut token_stack: Vec<Token> = Vec::new();
+    let mut operator_stack: Vec<Token> = Vec::new();
     let token_list: Vec<Token> = str_to_token(&infix_list);
 
     // Shunting yard algorithm - START
     // https://en.wikipedia.org/wiki/Shunting-yard_algorithm
     for token in token_list {
         if token.is_number() {
-            tokenstack.push(token);
+            token_stack.push(token);
         } else if token.is_operator() {
-            while !operatorstack.is_empty()
-                && operatorstack
+            while !operator_stack.is_empty()
+                && operator_stack
                     .last()
                     .unwrap()
                     .has_greater_precedence_than(&token)
-                && operatorstack.last().unwrap().operator_value() != "(".to_string()
+                && operator_stack.last().unwrap().operator_value() != "("
             {
-                tokenstack.push(operatorstack.pop().unwrap());
+                token_stack.push(operator_stack.pop().unwrap());
             }
-            operatorstack.push(token);
+            operator_stack.push(token);
         } else if token.is_left_parenthesis() {
-            operatorstack.push(token);
+            operator_stack.push(token);
         } else if token.is_right_parenthesis() {
-            while !operatorstack.last().unwrap().is_left_parenthesis() {
-                tokenstack.push(operatorstack.pop().unwrap());
+            while !operator_stack.last().unwrap().is_left_parenthesis() {
+                token_stack.push(operator_stack.pop().unwrap());
             }
-            operatorstack.pop();
+            operator_stack.pop();
         }
     }
-    while !operatorstack.is_empty() {
-        tokenstack.push(operatorstack.pop().unwrap());
+    while !operator_stack.is_empty() {
+        token_stack.push(operator_stack.pop().unwrap());
     }
     // Shunting yard algorithm - END
 
@@ -178,12 +178,12 @@ pub fn infix_to_postfix<'a>(infix_list: &'a [&str]) -> Vec<&'a str> {
 
     // Adds "references to the elements in the original input"
     // to "the list to be returned"
-    for item in tokenstack {
+    for item in token_stack {
         let mut index = 0;
         match item.tokentype {
             TokenType::Operator(val) => {
                 for element in infix_list {
-                    if *element == &val {
+                    if *element == val {
                         output.push(infix_list[index]);
                         break;
                     }
@@ -192,7 +192,7 @@ pub fn infix_to_postfix<'a>(infix_list: &'a [&str]) -> Vec<&'a str> {
             }
             TokenType::Number(num) => {
                 for element in infix_list {
-                    if *element == &num.to_string() {
+                    if *element == num.to_string() {
                         output.push(infix_list[index]);
                         break;
                     }
