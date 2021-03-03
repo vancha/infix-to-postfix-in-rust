@@ -17,29 +17,29 @@ impl Token {
     fn new(token_type: &str) -> Self {
         let token = token_type.to_string().parse::<i32>();
         match token {
-            Ok(value) => Token {
+            Ok(value) => Self {
                 tokentype: TokenType::Number(value),
             },
             _ => match token_type {
-                "(" => Token {
+                "(" => Self {
                     tokentype: TokenType::LeftParenthesis,
                 },
-                ")" => Token {
+                ")" => Self {
                     tokentype: TokenType::RightParenthesis,
                 },
-                "^" => Token {
+                "^" => Self {
                     tokentype: TokenType::Operator("^".to_string()),
                 },
-                "*" => Token {
+                "*" => Self {
                     tokentype: TokenType::Operator("*".to_string()),
                 },
-                "/" => Token {
+                "/" => Self {
                     tokentype: TokenType::Operator("/".to_string()),
                 },
-                "+" => Token {
+                "+" => Self {
                     tokentype: TokenType::Operator("+".to_string()),
                 },
-                "-" => Token {
+                "-" => Self {
                     tokentype: TokenType::Operator("-".to_string()),
                 },
                 _ => panic!("Don't use invalid values"),
@@ -75,7 +75,7 @@ impl Token {
         }
     }
 
-    /* this is horrible, change this */
+    // checks for precedence of operators
     fn has_greater_precedence_than(&self, other: &Token) -> bool {
         let mut precedence = HashMap::new();
         precedence.insert("^".to_string(), 4);
@@ -84,28 +84,27 @@ impl Token {
         precedence.insert("+".to_string(), 2);
         precedence.insert("-".to_string(), 2);
 
-        let self_token_type = match &self.tokentype {
-            TokenType::Operator(val) => val.clone(),
-            TokenType::LeftParenthesis => "(".to_string().clone(),
-            _ => {
-                println!("{:?}", self.tokentype);
-                panic!("TokenType should be self operator")
-            }
-        };
-
-        let other_token_type = match &other.tokentype {
+        let self_token_value = match &self.tokentype {
             TokenType::Operator(val) => val,
-            _ => panic!("TokenType should be other operator"),
+            TokenType::LeftParenthesis => "(",
+            _ => panic!("Should be called only on self operator-stack"),
         };
 
-        return precedence.get::<str>(&self_token_type) >= precedence.get::<str>(&other_token_type)
-            && &self_token_type != other_token_type;
+        let other_token_value = match &other.tokentype {
+            TokenType::Operator(val) => val,
+            _ => panic!("Should be called only on operator-stack"),
+        };
+
+        return precedence.get::<str>(&self_token_value)
+            >= precedence.get::<str>(&other_token_value)
+            && &self_token_value != other_token_value;
     }
 
-    fn operator_value(&self) -> String {
+    // extracts operator-value from the token
+    fn operator_value(&self) -> &str {
         match &self.tokentype {
-            TokenType::Operator(val) => val.clone(),
-            _ => panic!("Should be called only on operator"),
+            TokenType::Operator(val) => val,
+            _ => panic!("Can only extract from operator"),
         }
     }
 }
@@ -126,24 +125,29 @@ fn str_to_token(infix: &[&str]) -> Vec<Token> {
 
     token_list
 }
-/// Turns `Vec<&str>` in infix notation, to `Vec<String>` in postfix notation
+
+/// Turns `&[&str]` of infix notation, into a postfix notation.
 ///
 /// Does not perform the actual evaluation expression, but can be used to change an expression from
 /// infix notation, to postfix for easier evaluation.
+///
+/// To perform calculation, use crate "`postfix`".
 /// # Example:
 /// ```
 /// use infixtopostfix;
 /// assert_eq!(infixtopostfix::infix_to_postfix(&["1","+","1"]),&["1","1","+"]);
 /// ```
 pub fn infix_to_postfix<'a>(infix_list: &'a [&str]) -> Vec<&'a str> {
-    let mut outputqueue: std::collections::VecDeque<Token> = std::collections::VecDeque::new();
+    // "postfix" representation of tokens (not to be returned)
+    let mut tokenstack: Vec<Token> = Vec::new();
     let mut operatorstack: Vec<Token> = Vec::new();
     let token_list: Vec<Token> = str_to_token(&infix_list);
 
-    // this is shunting yard algorithm - START
+    // Shunting yard algorithm - START
+    // https://en.wikipedia.org/wiki/Shunting-yard_algorithm
     for token in token_list {
         if token.is_number() {
-            outputqueue.push_back(token);
+            tokenstack.push(token);
         } else if token.is_operator() {
             while !operatorstack.is_empty()
                 && operatorstack
@@ -152,54 +156,53 @@ pub fn infix_to_postfix<'a>(infix_list: &'a [&str]) -> Vec<&'a str> {
                     .has_greater_precedence_than(&token)
                 && operatorstack.last().unwrap().operator_value() != "(".to_string()
             {
-                outputqueue.push_back(operatorstack.pop().unwrap());
+                tokenstack.push(operatorstack.pop().unwrap());
             }
             operatorstack.push(token);
         } else if token.is_left_parenthesis() {
             operatorstack.push(token);
         } else if token.is_right_parenthesis() {
             while !operatorstack.last().unwrap().is_left_parenthesis() {
-                outputqueue.push_back(operatorstack.pop().unwrap());
+                tokenstack.push(operatorstack.pop().unwrap());
             }
             operatorstack.pop();
         }
     }
     while !operatorstack.is_empty() {
-        outputqueue.push_back(operatorstack.pop().unwrap());
+        tokenstack.push(operatorstack.pop().unwrap());
     }
-    // this is shunting yard algorithm - END
+    // Shunting yard algorithm - END
 
+    // list to be returned
     let mut output: Vec<&str> = Vec::new();
-    let mut counter = 0;
 
-    for item in outputqueue {
+    // Adds "references to the elements in the original input"
+    // to "the list to be returned"
+    for item in tokenstack {
+        let mut index = 0;
         match item.tokentype {
             TokenType::Operator(val) => {
                 for element in infix_list {
                     if *element == &val {
-                        output.push(infix_list[counter]);
+                        output.push(infix_list[index]);
                         break;
                     }
-                    counter += 1;
+                    index += 1;
                 }
-                counter = 0;
-                val
             }
             TokenType::Number(num) => {
                 for element in infix_list {
                     if *element == &num.to_string() {
-                        output.push(infix_list[counter]);
+                        output.push(infix_list[index]);
                         break;
                     }
-                    counter += 1;
+                    index += 1;
                 }
-                counter = 0;
-                num.to_string()
             }
             _ => panic!("Only numbers and operators can be the value at this point"),
         };
     }
-
+    // let output = output; // even though return type should be immutable, the output is mutable, so is this statement necessary?
     output
 }
 
@@ -221,9 +224,7 @@ mod tests {
     #[test]
     fn nested_parenthesis_work() {
         assert_eq!(
-            infix_to_postfix(&[
-                "1", "*", "(", "7", "-", "2", "+", "(", "1", "+", "1", ")", ")"
-            ]),
+            infix_to_postfix(&["1", "*", "(", "7", "-", "2", "+", "(", "1", "+", "1", ")", ")"]),
             &["1", "7", "2", "-", "1", "1", "+", "+", "*"]
         );
     }
