@@ -206,6 +206,59 @@ pub fn infix_to_postfix<'a>(infix_list: &'a [&str]) -> Vec<&'a str> {
     output
 }
 
+///evaluation as explained here: https://www.includehelp.com/c/evaluation-of-postfix-expressions-using-stack-with-c-program.aspx
+fn evaluate_postfix_expression<'a>(postfix: &[&'a str])->f64 {
+    let mut evaluation_stack:Vec<f64> = vec![];
+    //while reading expression from left to right
+    for token in postfix {
+        match token.parse::<f64>() {
+            //push the element on the stack if it's an operand
+            Ok(value) =>{
+                evaluation_stack.push(value);
+            },
+            //if it's an operator
+            Err(_) => {
+                match token {
+                    &"+" => {
+                        //pop two operands from the stack
+                        let operand1 = evaluation_stack.pop().unwrap();
+                        let operand2 = evaluation_stack.pop().unwrap();
+                        //evaluate it
+                        let result = operand2 + operand1;
+                        //push back the result of the evaluation
+                        evaluation_stack.push(result);
+                    },
+                    &"-" => {
+                        //pop two operands from the stack
+                        let operand1 = evaluation_stack.pop().unwrap();
+                        let operand2 = evaluation_stack.pop().unwrap();
+                        let result = operand2 - operand1;
+                        evaluation_stack.push(result);
+                    },
+                    &"/" => {
+                        //pop two operands from the stack
+                        let operand1 = evaluation_stack.pop().unwrap();
+                        let operand2 = evaluation_stack.pop().unwrap();
+                        let result = operand2 / operand1;
+                        evaluation_stack.push(result);
+                    },
+                    &"*" => {
+                        //pop two operands from the stack
+                        let operand1 = evaluation_stack.pop().unwrap();
+                        let operand2 = evaluation_stack.pop().unwrap();
+                        let result = operand2 * operand1;
+                        evaluation_stack.push(result);
+                    },
+                    _ => {panic!("aaa"); },
+
+                }
+            },
+        }
+    }
+    evaluation_stack.pop().unwrap()
+}
+
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -238,4 +291,20 @@ mod tests {
             &["3", "4", "2", "*", "1", "5", "-", "2", "3", "^", "^", "/", "+"]
         );
     }
+ 
+    #[test]
+    fn evalutation_works() {
+        assert_eq!(
+            evaluate_postfix_expression(&["1", "1","+"]),
+            2.0
+        );
+    }
+    #[test]
+    fn evaluation_with_multiple_operands_works() {
+        assert_eq!(
+            evaluate_postfix_expression(&["1", "7", "2", "-", "1", "1", "+", "+", "*"]),
+            7.0
+        );
+    }
+
 }
